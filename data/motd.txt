@@ -1,1 +1,1 @@
-Welcome to let-s_chat. Chat by username without installing a local client.
+Chat in real time with your friends and have fun!

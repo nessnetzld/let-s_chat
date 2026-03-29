@@ -3,16 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>let-s_chat</title>
+    <title>Let's Chat!</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <!-- Main shell that contains login, presence list, and chat panels. -->
     <main class="app">
       <header class="header">
-        <h1 class="title">let-s_chat Browser Client</h1>
+        <h1 class="title">Let's Chat!</h1>
         <div id="status" class="status">Disconnected</div>
       </header>
 
+      <!-- Login section initializes the in-browser chat session. -->
       <section class="login">
         <input
           id="username"
@@ -23,6 +25,7 @@
         <button id="loginBtn" type="button">Login</button>
       </section>
 
+      <!-- Two-column layout: active users on the left, conversation on the right. -->
       <section class="content">
         <aside class="sidebar">
           <h2>Online users</h2>
@@ -30,9 +33,11 @@
         </aside>
 
         <section class="chat">
+          <!-- Message of the day is fetched dynamically from the backend API. -->
           <div id="motd" class="motd">Loading message of the day...</div>
           <div id="messages" class="messages"></div>
 
+          <!-- Composer supports direct messages or public channel messages. -->
           <div class="composer">
             <div class="row">
               <input

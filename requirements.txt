@@ -1,3 +1,3 @@
-# Este proyecto actualmente usa solo la libreria estandar de Python.
-# Agrega aqui paquetes externos cuando los necesites, por ejemplo:
+# This project currently uses only Python's standard library.
+# Add external packages here when needed, for example:
 # flask==3.1.0

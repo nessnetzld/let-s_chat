@@ -8,12 +8,14 @@ from threading import Lock
 from urllib.parse import parse_qs, urlparse
 
 
+# Resolve project directories once so all file access is stable regardless of cwd.
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
 DATA_DIR = BASE_DIR / "data"
 MOTD_FILE = DATA_DIR / "motd.txt"
 
 
+# Protect shared in-memory state because requests run concurrently.
 state_lock = Lock()
 messages = []
 online_users = set()
@@ -21,6 +23,7 @@ next_message_id = 1
 
 
 def build_message(sender, recipient, content):
+	# Generate a monotonic message id so clients can poll incrementally.
 	global next_message_id
 	message = {
 		"id": next_message_id,
@@ -35,18 +38,22 @@ def build_message(sender, recipient, content):
 
 class ChatHandler(SimpleHTTPRequestHandler):
 	def __init__(self, *args, **kwargs):
+		# Serve frontend files directly from ./static.
 		super().__init__(*args, directory=str(STATIC_DIR), **kwargs)
 
 	def do_GET(self):
+		# Parse URL components to separate route and query parameters.
 		parsed = urlparse(self.path)
 
 		if parsed.path == "/api/users":
+			# Return online users so the sidebar reflects current presence.
 			with state_lock:
 				payload = {"users": sorted(online_users)}
 			self._send_json(payload)
 			return
 
 		if parsed.path == "/api/messages":
+			# Support long polling by returning only messages newer than after_id.
 			query = parse_qs(parsed.query)
 			username = query.get("username", [""])[0].strip()
 			after_id = self._safe_int(query.get("after_id", ["0"])[0], default=0)
@@ -56,6 +63,7 @@ class ChatHandler(SimpleHTTPRequestHandler):
 				return
 
 			with state_lock:
+				# Deliver public messages and direct messages sent to this user.
 				filtered = [
 					msg
 					for msg in messages
@@ -65,6 +73,7 @@ class ChatHandler(SimpleHTTPRequestHandler):
 			return
 
 		if parsed.path == "/api/motd":
+			# Read MOTD from disk so it can be changed without editing code.
 			if not MOTD_FILE.exists():
 				self._send_json({"motd": "Welcome to let-s_chat"})
 				return
@@ -78,6 +87,7 @@ class ChatHandler(SimpleHTTPRequestHandler):
 		return super().do_GET()
 
 	def do_POST(self):
+		# POST routes mutate state (login/logout/send).
 		parsed = urlparse(self.path)
 		body = self._read_json_body()
 
@@ -86,6 +96,7 @@ class ChatHandler(SimpleHTTPRequestHandler):
 			return
 
 		if parsed.path == "/api/login":
+			# Login registers a user as online and sends a system greeting.
 			username = body.get("username", "").strip()
 			if not username:
 				self._send_json({"error": "username is required"}, status=HTTPStatus.BAD_REQUEST)
@@ -98,6 +109,7 @@ class ChatHandler(SimpleHTTPRequestHandler):
 			return
 
 		if parsed.path == "/api/logout":
+			# Logout removes presence so other clients see an accurate user list.
 			username = body.get("username", "").strip()
 			if not username:
 				self._send_json({"error": "username is required"}, status=HTTPStatus.BAD_REQUEST)
@@ -109,6 +121,7 @@ class ChatHandler(SimpleHTTPRequestHandler):
 			return
 
 		if parsed.path == "/api/send":
+			# Sending appends a new chat record consumed by polling clients.
 			sender = body.get("from", "").strip()
 			recipient = body.get("to", "all").strip() or "all"
 			content = body.get("text", "").strip()
@@ -132,6 +145,7 @@ class ChatHandler(SimpleHTTPRequestHandler):
 		print(f"[{self.log_date_time_string()}] {self.address_string()} - {format % args}")
 
 	def _read_json_body(self):
+		# Parse request body safely; return None for malformed JSON.
 		length = self._safe_int(self.headers.get("Content-Length", "0"), default=0)
 		if length <= 0:
 			return {}
@@ -143,6 +157,7 @@ class ChatHandler(SimpleHTTPRequestHandler):
 			return None
 
 	def _send_json(self, payload, status=HTTPStatus.OK):
+		# Centralize JSON responses to keep headers consistent across endpoints.
 		data = json.dumps(payload).encode("utf-8")
 		self.send_response(status)
 		self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -152,6 +167,7 @@ class ChatHandler(SimpleHTTPRequestHandler):
 
 	@staticmethod
 	def _safe_int(value, default=0):
+		# Avoid route crashes when clients send invalid numeric values.
 		try:
 			return int(value)
 		except (TypeError, ValueError):
@@ -159,6 +175,7 @@ class ChatHandler(SimpleHTTPRequestHandler):
 
 
 def run_server(host, port):
+	# Ensure runtime directories exist before serving requests.
 	DATA_DIR.mkdir(exist_ok=True)
 	STATIC_DIR.mkdir(exist_ok=True)
 	server = ThreadingHTTPServer((host, port), ChatHandler)
