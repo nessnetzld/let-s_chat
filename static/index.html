@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>let-s_chat</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <h1 class="title">let-s_chat Browser Client</h1>
+        <div id="status" class="status">Disconnected</div>
+      </header>
+
+      <section class="login">
+        <input
+          id="username"
+          type="text"
+          placeholder="Your username"
+          maxlength="24"
+        />
+        <button id="loginBtn" type="button">Login</button>
+      </section>
+
+      <section class="content">
+        <aside class="sidebar">
+          <h2>Online users</h2>
+          <ul id="users" class="users"></ul>
+        </aside>
+
+        <section class="chat">
+          <div id="motd" class="motd">Loading message of the day...</div>
+          <div id="messages" class="messages"></div>
+
+          <div class="composer">
+            <div class="row">
+              <input
+                id="to"
+                type="text"
+                placeholder="Recipient username (or all)"
+                value="all"
+              />
+              <input id="text" type="text" placeholder="Write a message..." />
+            </div>
+            <button id="sendBtn" type="button">Send</button>
+            <p class="hint">
+              Tip: use recipient all for a simple public channel.
+            </p>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
