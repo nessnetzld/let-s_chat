@@ -15,6 +15,8 @@
 {Provide a link to your YouTube demonstration. It should be a 4-5 minute demo of the software running (you will need to show two pieces of software running and communicating with each other) and a walkthrough of the code.}
 
 [Software Demo Video](https://youtu.be/zdF2Y_lIbrk)
+[GitHub Link](https://github.com/nessnetzld/let-s_chat)
+[Deployment Link](https://let-s-chat-son7.onrender.com)
 
 # Network Communication
 
